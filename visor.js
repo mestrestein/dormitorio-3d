@@ -150,7 +150,9 @@ function frame(t){
   } else if(shift > 0 && document.querySelector('#b-render').getAttribute('aria-pressed') !== 'true'){ shift = Math.max(0, shift - dt*3); pinta = true; }
   if(pinta){
     camera.position.copy(pos); camera.rotation.set(pitch, yaw, 0, 'YXZ');
-    camera.fov = FOVY; camera.updateProjectionMatrix();
+    /* en pantallas más estrechas que el render se abre el ángulo para que quepa el mismo ancho */
+    const k = Math.min(1, camera.aspect/(1086/1449));
+    camera.fov = k < 1 ? 2*Math.atan(Math.tan(FOVY*Math.PI/360)/k)*180/Math.PI : FOVY; camera.updateProjectionMatrix();
     camera.projectionMatrix.elements[9] = -SHIFT*shift; camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
     renderer.render(scene, camera); pinta = false;
   }
