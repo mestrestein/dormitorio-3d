@@ -64,12 +64,12 @@ function material(m){
   const map = foto ? tex(`fotos/${m.name.slice(5)}.webp`) : u.map ? tex(g === 'sky' ? 'tex/sky_jardin.webp' : `tex/${u.map}.webp`) : null;
   if(g === 'sky' && map){ map.wrapS = map.wrapT = THREE.ClampToEdgeWrapping; }
   return new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, toneMapped: g !== 'sky',
-    uniforms: { map: { value: map }, useMap: { value: map ? 1 : 0 }, lm: { value: hasLm ? tex(`lm_${g}.webp`) : null }, useLm: { value: hasLm ? 1 : 0 },
+    uniforms: { map: { value: map }, useMap: { value: map ? 1 : 0 }, lm: { value: hasLm ? tex(`lm_${g}.webp?v=4`) : null }, useLm: { value: hasLm ? 1 : 0 },
       env: { value: ENV }, color: { value: new THREE.Color(c[0], c[1], c[2]) }, rough: { value: u.rough ?? .6 }, metal: { value: u.metal || 0 },
       spec: { value: u.spec ?? .5 }, alpha: { value: a }, glow: { value: g === 'emit' ? (u.emit || 4) : 0 }, unlit: { value: g === 'sky' ? 1 : 0 }, mapK: { value: (foto || g === 'sky') ? 1 : 2 } },
     side: (u.ds || !hasLm) ? THREE.DoubleSide : THREE.FrontSide, transparent: a < 1, depthWrite: !(a < 1) });
 }
-fetch('room.json').then(r => r.json()).then(j => { const b = atob(j.glb), u = new Uint8Array(b.length); for(let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
+fetch('room.json?v=4').then(r => r.json()).then(j => { const b = atob(j.glb), u = new Uint8Array(b.length); for(let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
   $('#carga b').style.width = '80%'; new GLTFLoader().parse(u.buffer, '', gl => {
   const root = gl.scene; root.scale.setScalar(100);
   root.traverse(o => { if(o.isMesh) o.material = material(o.material); });
