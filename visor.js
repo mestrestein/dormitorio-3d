@@ -98,6 +98,10 @@ function limita(p){
   p.y = Math.max(40, Math.min(240, p.y));
   if(p.z > 575 && p.x > 52){ p.z = Math.min(p.z, 668); p.x = Math.min(p.x, 124); }
   else { p.x = Math.max(-124, Math.min(124, p.x)); p.z = Math.max(18, Math.min(575, p.z)); }
+  /* la cama y las mesitas: se rodean, no se atraviesan */
+  const x0 = -112, x1 = 112, z1 = 228;
+  if(p.x > x0 && p.x < x1 && p.z < z1){ const dz = z1 - p.z, dl = p.x - x0, dr = x1 - p.x;
+    if(dz <= dl && dz <= dr) p.z = z1; else if(dl < dr) p.x = x0; else p.x = x1; }
 }
 const tecla = {};
 addEventListener('keydown', e => { tecla[e.code] = true; if(/Arrow/.test(e.code)) e.preventDefault(); });
@@ -125,6 +129,15 @@ function anda(f, l){
 for(const [id, n] of [['b-render', 'render'], ['b-pie', 'pie'], ['b-armario', 'armario'], ['b-ventana', 'ventana']]) $('#' + id).onclick = () => ir(n);
 
 /* comparar: original y réplica con la misma cámara */
+/* joystick en pantalla: arriba = adelante, lados = de lado */
+const joy = $('#joy'), bola = joy.querySelector('b'); let jx = 0, jy = 0, jid = null;
+function joyMueve(e){ const r = joy.getBoundingClientRect(), R = r.width/2; let dx = e.clientX - (r.left + R), dy = e.clientY - (r.top + R);
+  const L = Math.hypot(dx, dy), m = R*.75; if(L > m){ dx *= m/L; dy *= m/L; }
+  jx = dx/m; jy = dy/m; bola.style.transform = `translate(${dx}px, ${dy}px)`; }
+joy.addEventListener('pointerdown', e => { e.preventDefault(); jid = e.pointerId; joy.setPointerCapture(jid); joyMueve(e); });
+joy.addEventListener('pointermove', e => { if(e.pointerId === jid) joyMueve(e); });
+const joySuelta = e => { if(e.pointerId !== jid) return; jid = null; jx = jy = 0; bola.style.transform = ''; };
+joy.addEventListener('pointerup', joySuelta); joy.addEventListener('pointercancel', joySuelta);
 const comp = $('#comp'), marco = $('#marco');
 $('#b-comp').onclick = () => { comp.hidden = false; };
 $('#b-cerrar').onclick = () => { comp.hidden = true; pinta = true; };
@@ -141,6 +154,7 @@ function frame(t){
   const v = (tecla.KeyW || tecla.ArrowUp ? 1 : 0) - (tecla.KeyS || tecla.ArrowDown ? 1 : 0);
   const l = (tecla.KeyD ? 1 : 0) - (tecla.KeyA ? 1 : 0), g = (tecla.ArrowRight ? 1 : 0) - (tecla.ArrowLeft ? 1 : 0);
   if(v || l) anda(v*170*dt, l*140*dt);
+  if(jx || jy) anda(-jy*160*dt, jx*120*dt);
   if(g){ libre(); yaw -= g*1.6*dt; pinta = true; }
   if(objetivo){
     const k = 1 - Math.pow(.0015, dt);
