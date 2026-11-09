@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dormitorio réplica 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500&display=swap">
+<style>
+:root{color-scheme:light}body{margin:0}img{max-width:100%}
+/* Una sola pantalla: el cuarto ocupa todo; la interfaz son dos tiras finas de madera clara encima. */
+:root{
+  --bg:#1b1612; --chip:rgba(250,244,236,.9); --chip-fg:#2a2119; --chip-line:rgba(42,33,25,.14);
+  --accent:#a24f2c; --muted:#6d5e50; --panel:#f6efe6; --panel-fg:#241c15;
+  --f-ui:"Instrument Sans", system-ui, sans-serif; --f-disp:"Fraunces", Georgia, serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --chip:rgba(32,26,21,.88); --chip-fg:#f1e7da; --chip-line:rgba(241,231,218,.16); --muted:#b4a391; --panel:#211a15; --panel-fg:#f1e7da; color-scheme:dark } }
+:root[data-theme="dark"]{ --chip:rgba(32,26,21,.88); --chip-fg:#f1e7da; --chip-line:rgba(241,231,218,.16); --muted:#b4a391; --panel:#211a15; --panel-fg:#f1e7da; color-scheme:dark }
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--chip-fg);font-family:var(--f-ui);overflow:hidden;touch-action:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab}
+#c:active{cursor:grabbing}
+.barra{position:fixed;left:0;right:0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;pointer-events:none;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.arriba{top:calc(12px + env(safe-area-inset-top, 0px))}
+.abajo{bottom:calc(14px + env(safe-area-inset-bottom, 0px));justify-content:center}
+.chip{pointer-events:auto;background:var(--chip);color:var(--chip-fg);border:1px solid var(--chip-line);border-radius:999px;
+  padding:8px 14px;font:500 13px/1.2 var(--f-ui);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+button.chip{cursor:pointer}
+button.chip:hover{border-color:var(--accent)}
+button.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.chip[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.nombre{font:500 15px/1.2 var(--f-disp);letter-spacing:.01em}
+.nombre small{font:400 12px var(--f-ui);color:var(--muted);margin-left:8px}
+#ayuda{color:var(--muted);font-size:12px}
+#conjunto{font-size:12px;color:var(--muted)}
+@media (max-width:520px){ #conjunto{display:none} }
+#carga{position:fixed;inset:0;display:grid;place-items:center;font:500 14px var(--f-ui);color:#e9dccb;pointer-events:none}
+#carga i{display:block;width:180px;height:2px;background:rgba(233,220,203,.2);margin-top:10px}
+#carga i b{display:block;height:100%;width:0;background:#e0a070;transition:width .3s}
+#comp{position:fixed;inset:0;background:var(--panel);color:var(--panel-fg);display:flex;flex-direction:column;align-items:center;gap:12px;
+  padding-block:calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-bottom, 0px));
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+#comp header{display:flex;gap:12px;align-items:baseline;width:100%;max-width:720px;justify-content:space-between;flex-wrap:wrap}
+#comp h2{font:500 20px/1.2 var(--f-disp);margin:0;text-wrap:balance}
+#comp p{margin:0;color:var(--muted);font-size:13px;max-width:62ch}
+.marco{position:relative;flex:1;min-height:0;aspect-ratio:1086/1449;max-width:100%;border-radius:4px;overflow:hidden;user-select:none;touch-action:none}
+.marco img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none;pointer-events:none}
+.marco .b{clip-path:inset(0 0 0 50%)}
+.marco .raya{position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);pointer-events:none}
+.marco .et{position:absolute;top:10px;padding:4px 8px;border-radius:4px;background:rgba(20,16,12,.6);color:#fff;font:500 11px var(--f-ui);letter-spacing:.06em;text-transform:uppercase}
+@media (prefers-reduced-motion: reduce){ #carga i b{transition:none} }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="carga"><div>Cargando el dormitorio<i><b></b></i></div></div>
+<div class="barra arriba">
+  <span class="chip nombre">Dormitorio <small>276 × 645 cm · techo 265</small></span>
+  <span class="chip" id="conjunto">En la pared: «Recuerdos en espejo» de Momenturies · 10 placas, 104 × 57 cm</span>
+</div>
+<div class="barra abajo">
+  <button class="chip" id="b-render" aria-pressed="true">Vista del render</button>
+  <button class="chip" id="b-pie">Pie de cama</button>
+  <button class="chip" id="b-armario">Armarios y entrada</button>
+  <button class="chip" id="b-ventana">Ventanal</button>
+  <button class="chip" id="b-comp">Comparar con el original</button>
+  <span class="chip" id="ayuda">Arrastra para mirar · rueda o WASD para andar</span>
+</div>
+<section id="comp" hidden>
+  <header>
+    <h2>Render original y réplica en Blender</h2>
+    <button class="chip" id="b-cerrar">Volver al 3D</button>
+  </header>
+  <p>Misma cámara: 103 cm de altura, a 541 cm del cabecero. Desliza para comparar.</p>
+  <div class="marco" id="marco">
+    <img src="original.jpg" alt="Render original del dormitorio">
+    <img class="b" src="replica.jpg" alt="Render de la réplica en Blender">
+    <span class="et" style="left:10px">Original</span><span class="et" style="right:10px">Réplica</span>
+    <span class="raya"></span>
+  </div>
+</section>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module" src="visor.js"></script>
+</body>
+</html>
